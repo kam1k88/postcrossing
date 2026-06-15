@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 # ---------------------------------------------------------------------------
 DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
 CSV_PATH      = os.path.join(DOCS_DIR, "history.csv")
-REPORT_PATH   = os.path.join(DOCS_DIR, "received_report.csv")
+REPORT_PATH   = os.path.join(DOCS_DIR, "TimeData.csv")
 OUTPUT_PATH   = os.path.join(DOCS_DIR, "index.html")
 
 METRICS = [
@@ -517,19 +517,18 @@ def main() -> None:
         df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
         print(f"[dashboard] Loaded {len(df)} records.")
 
-    # Load received report if available
+    # Load TimeData.csv (datetime, postcards_received) — ISO 8601 format
     rdf = None
     if os.path.exists(REPORT_PATH):
         try:
             rdf = pd.read_csv(REPORT_PATH)
-            # received_report.csv has clean columns: datetime, postcards_received
-            rdf["datetime"] = rdf["datetime"].str.replace(r"\s*UTC$", "", regex=True)
             rdf["datetime"] = pd.to_datetime(rdf["datetime"], format="%Y-%m-%d %H:%M:%S", utc=True, errors="coerce")
             rdf["postcards_received"] = pd.to_numeric(rdf["postcards_received"], errors="coerce")
             rdf = rdf.dropna(subset=["datetime", "postcards_received"])
-            print(f"[dashboard] Loaded {len(rdf)} received-report rows.")
+            rdf = rdf[rdf["postcards_received"] > 0]
+            print(f"[dashboard] Loaded {len(rdf)} TimeData rows.")
         except Exception as e:
-            print(f"[dashboard] Failed to load received_report.csv: {e}")
+            print(f"[dashboard] Failed to load TimeData.csv: {e}")
             rdf = None
 
     html = generate_dashboard(df, rdf)
