@@ -10,13 +10,13 @@
     "laps_around_world": 11132316.0
   },
   {
-    "timestamp": "2026-06-15T02:42:13Z",
-    "members": 805792,
+    "timestamp": "2026-06-15T02:45:37Z",
+    "members": 805793,
     "countries": 207,
-    "postcards_received": 87075213,
+    "postcards_received": 87075221,
     "received_last_hour": 229,
-    "postcards_traveling": 422588,
-    "km_traveled": null,
-    "laps_around_world": 11132323.0
+    "postcards_traveling": 422594,
+    "km_traveled": 446127900029,
+    "laps_around_world": 11132324.0
   }
 ]
