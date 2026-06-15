@@ -277,30 +277,41 @@ def generate_dashboard(df: pd.DataFrame) -> str:
     .download-bar {{
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.85rem;
       flex-wrap: wrap;
       margin-bottom: 2rem;
     }}
     .download-bar .label {{
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       color: #9E9E9E;
-      font-weight: 500;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 0.25rem;
     }}
     .download-bar a {{
       display: inline-flex;
       align-items: center;
-      gap: 0.35rem;
-      background: #2D3250;
-      color: #E0E0E0;
+      gap: 0.5rem;
       text-decoration: none;
-      border: 1px solid #3D4470;
-      border-radius: 8px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.82rem;
-      font-weight: 500;
-      transition: background 0.15s, border-color 0.15s;
+      border-radius: 10px;
+      padding: 0.6rem 1.2rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     }}
-    .download-bar a:hover {{ background: #3D4470; border-color: #5D6AA0; }}
+    .download-bar a:hover {{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+      filter: brightness(1.12);
+    }}
+    .download-bar a:active {{ transform: translateY(0); }}
+    .btn-csv  {{ background: linear-gradient(135deg, #1565C0, #1E88E5); color: #fff; }}
+    .btn-json {{ background: linear-gradient(135deg, #E65100, #FF7043); color: #fff; }}
+    .btn-parquet {{ background: linear-gradient(135deg, #4A148C, #8E24AA); color: #fff; }}
+    .btn-icon {{ font-size: 1rem; }}
 
     /* ── Footer ── */
     footer {{
@@ -344,10 +355,10 @@ def generate_dashboard(df: pd.DataFrame) -> str:
 
   <!-- Download -->
   <div class="download-bar">
-    <span class="label">Download data:</span>
-    <a href="history.csv" download>⬇ history.csv</a>
-    <a href="history.json" download>⬇ history.json</a>
-    <a href="history.parquet" download>⬇ history.parquet</a>
+    <span class="label">Download:</span>
+    <a href="history.csv"     download class="btn-csv"><span class="btn-icon">📄</span> CSV</a>
+    <a href="history.json"    download class="btn-json"><span class="btn-icon">&#123; &#125;</span> JSON</a>
+    <a href="history.parquet" download class="btn-parquet"><span class="btn-icon">🗜️</span> Parquet</a>
   </div>
 
   <!-- Charts -->
@@ -362,6 +373,8 @@ def generate_dashboard(df: pd.DataFrame) -> str:
     <div>
       Data auto-collected via GitHub Actions ·
       <a href="https://www.postcrossing.com/" target="_blank" rel="noopener">postcrossing.com</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/kam1k88/postcrossing" target="_blank" rel="noopener">⭐ GitHub Repository</a>
     </div>
   </footer>
 
