@@ -96,6 +96,13 @@ def parse_metrics(html: str | None) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator=" ", strip=True)
 
+    # Debug: print context around "km" to diagnose parsing issues
+    idx = text.lower().find("km traveled")
+    if idx >= 0:
+        print(f"[scraper] DEBUG km context: {repr(text[max(0,idx-60):idx+25])}")
+    else:
+        print("[scraper] DEBUG: 'km traveled' NOT FOUND in page text")
+
     # Pattern helper: find a number that follows a keyword phrase
     def find_number(pattern: str) -> str | None:
         m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
