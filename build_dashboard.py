@@ -348,18 +348,18 @@ def generate_dashboard(df: pd.DataFrame) -> str:
 
 <main>
 
-  <!-- Stat cards -->
-  <div class="section-title">Current Values</div>
-  <div class="stats-grid">
-    {stat_cards_html}
-  </div>
-
   <!-- Download -->
   <div class="download-bar">
     <span class="label">Download:</span>
     <a href="history.csv"     download class="btn-csv"><span class="btn-icon">📄</span> CSV</a>
     <a href="history.json"    download class="btn-json"><span class="btn-icon">&#123; &#125;</span> JSON</a>
     <a href="history.parquet" download class="btn-parquet"><span class="btn-icon">🗜️</span> Parquet</a>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="section-title">Current Values</div>
+  <div class="stats-grid">
+    {stat_cards_html}
   </div>
 
   <!-- Charts -->
