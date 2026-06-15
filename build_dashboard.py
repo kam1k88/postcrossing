@@ -347,6 +347,7 @@ def generate_dashboard(df: pd.DataFrame) -> str:
     <span class="label">Download data:</span>
     <a href="history.csv" download>⬇ history.csv</a>
     <a href="history.json" download>⬇ history.json</a>
+    <a href="history.parquet" download>⬇ history.parquet</a>
   </div>
 
   <!-- Charts -->

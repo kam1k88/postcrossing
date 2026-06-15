@@ -182,6 +182,13 @@ def update_history(new_record: dict) -> None:
 
     print(f"[scraper] JSON updated → {JSON_PATH} ({len(records_json)} records)")
 
+    # ---- Parquet ------------------------------------------------------------
+    parquet_path = os.path.join(DOCS_DIR, "history.parquet")
+    import pandas as pd
+    df = pd.DataFrame(records_json)
+    df.to_parquet(parquet_path, index=False)
+    print(f"[scraper] Parquet updated → {parquet_path} ({len(df)} records)")
+
 
 # ---------------------------------------------------------------------------
 # Entry point
