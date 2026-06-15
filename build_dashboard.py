@@ -48,6 +48,13 @@ def fmt_number(val) -> str:
         return "—"
 
 
+def hex_to_rgba(hex_color: str, alpha: float = 0.1) -> str:
+    """Convert a #RRGGBB hex color to rgba(r,g,b,alpha) string."""
+    h = hex_color.lstrip("#")
+    r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
     """Return Plotly chart HTML (no full page wrapper, no CDN re-include)."""
     fig = go.Figure()
@@ -60,8 +67,7 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
         line=dict(color=color, width=2.5, shape="spline"),
         marker=dict(size=5, color=color, line=dict(width=1, color=CHART_BG)),
         fill="tozeroy",
-        fillcolor=color.replace(")", ", 0.08)").replace("rgb", "rgba") if "rgb" in color
-                   else color + "14",  # hex alpha
+        fillcolor=hex_to_rgba(color, 0.1),
     ))
 
     fig.update_layout(
@@ -374,7 +380,7 @@ def main() -> None:
 
     if not os.path.exists(CSV_PATH):
         print("[dashboard] history.csv not found — creating placeholder page.")
-        df = pd.DataFrame(columns=["timestamp"] + [col for col, *_ in METRICS])
+        df = pd.DataFrame(columns=["timestamp"] + [col for col, _title, _color, _icon in METRICS])
     else:
         df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
         print(f"[dashboard] Loaded {len(df)} records.")
