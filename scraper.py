@@ -97,11 +97,19 @@ def parse_metrics(html: str | None) -> dict:
     text = soup.get_text(separator=" ", strip=True)
 
     # Debug: print context around "km" to diagnose parsing issues
-    idx = text.lower().find("km traveled")
-    if idx >= 0:
-        print(f"[scraper] DEBUG km context: {repr(text[max(0,idx-60):idx+25])}")
+    for keyword in ("km traveled", "km travelled", "kilometers", "kilometres"):
+        idx = text.lower().find(keyword)
+        if idx >= 0:
+            print(f"[scraper] DEBUG found '{keyword}': {repr(text[max(0,idx-80):idx+30])}")
+            break
     else:
-        print("[scraper] DEBUG: 'km traveled' NOT FOUND in page text")
+        # fallback: find the number near 446 billion
+        m = re.search(r"44[0-9][,\d]+", text)
+        if m:
+            idx = m.start()
+            print(f"[scraper] DEBUG 446-pattern: {repr(text[max(0,idx-20):idx+60])}")
+        else:
+            print("[scraper] DEBUG: no km keyword and no 446-pattern found")
 
     # Pattern helper: find a number that follows a keyword phrase
     def find_number(pattern: str) -> str | None:
