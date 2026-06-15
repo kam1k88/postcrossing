@@ -96,20 +96,17 @@ def parse_metrics(html: str | None) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator=" ", strip=True)
 
-    # Debug: print context around "km" to diagnose parsing issues
-    for keyword in ("km traveled", "km travelled", "kilometers", "kilometres"):
-        idx = text.lower().find(keyword)
+    # Debug: dump first 500 and 500 chars around "statistic" to see what Actions gets
+    print(f"[scraper] DEBUG html_len={len(html)} text_len={len(text)}")
+    print(f"[scraper] DEBUG text[:300]: {repr(text[:300])}")
+    idx_stat = text.lower().find("statistic")
+    if idx_stat >= 0:
+        print(f"[scraper] DEBUG statistic ctx: {repr(text[max(0,idx_stat-50):idx_stat+200])}")
+    # check all metric keywords
+    for kw in ("members", "countries", "postcards received", "km traveled", "km travelled", "traveling", "laps around"):
+        idx = text.lower().find(kw)
         if idx >= 0:
-            print(f"[scraper] DEBUG found '{keyword}': {repr(text[max(0,idx-80):idx+30])}")
-            break
-    else:
-        # fallback: find the number near 446 billion
-        m = re.search(r"44[0-9][,\d]+", text)
-        if m:
-            idx = m.start()
-            print(f"[scraper] DEBUG 446-pattern: {repr(text[max(0,idx-20):idx+60])}")
-        else:
-            print("[scraper] DEBUG: no km keyword and no 446-pattern found")
+            print(f"[scraper] DEBUG '{kw}' at {idx}: {repr(text[max(0,idx-30):idx+50])}")
 
     # Pattern helper: find a number that follows a keyword phrase
     def find_number(pattern: str) -> str | None:
