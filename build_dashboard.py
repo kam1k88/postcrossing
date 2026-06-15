@@ -14,9 +14,9 @@ import plotly.graph_objects as go
 # Configuration
 # ---------------------------------------------------------------------------
 DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
-CSV_PATH    = os.path.join(DOCS_DIR, "history.csv")
-REPORT_PATH = os.path.join(DOCS_DIR, "received_report.csv")
-OUTPUT_PATH = os.path.join(DOCS_DIR, "index.html")
+CSV_PATH      = os.path.join(DOCS_DIR, "history.csv")
+REPORT_PATH   = os.path.join(DOCS_DIR, "TimeData.csv")
+OUTPUT_PATH   = os.path.join(DOCS_DIR, "index.html")
 
 METRICS = [
     ("members",             "Members",                  "#4FC3F7", "👥"),
@@ -244,7 +244,7 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
   <div class="section-title">Postcards Received — Daily Growth</div>
   <div class="download-bar" style="margin-bottom:1rem;">
     <span class="label">Download:</span>
-    <a href="received_report.csv" download class="btn-received"><span class="btn-icon">📊</span> received_report.csv</a>
+    <a href="TimeData.csv" download class="btn-received"><span class="btn-icon">📊</span> TimeData.csv</a>
   </div>
   <div class="chart-card">{build_received_chart(rdf2)}</div>
 """
@@ -521,8 +521,26 @@ def main() -> None:
     # Load received report if available
     rdf = None
     if os.path.exists(REPORT_PATH):
-        rdf = pd.read_csv(REPORT_PATH)
-        print(f"[dashboard] Loaded {len(rdf)} received-report rows.")
+        try:
+            raw = pd.read_csv(REPORT_PATH)
+            # TimeData.csv columns: Date (DD/MM/YY Www), UTC (HH:MM), XLS time, Received
+            # Build datetime column from Date + UTC
+            def parse_timedata_row(row):
+                date_str = str(row.get("Date", "")).strip()   # e.g. "01/09/19 Sun"
+                time_str = str(row.get("UTC", "")).strip()     # e.g. "23:15"
+                date_part = date_str.split()[0]                # "01/09/19"
+                d, m, y = date_part.split("/")
+                year = 2000 + int(y) if int(y) < 100 else int(y)
+                return f"{year:04d}-{int(m):02d}-{int(d):02d} {time_str}:00 UTC"
+
+            raw["datetime"] = raw.apply(parse_timedata_row, axis=1)
+            raw["postcards_received"] = pd.to_numeric(raw["Received"], errors="coerce")
+            rdf = raw[["datetime", "postcards_received"]].dropna(subset=["postcards_received"])
+            rdf = rdf[rdf["postcards_received"] > 0]  # skip the 0-row from 2005
+            print(f"[dashboard] Loaded {len(rdf)} TimeData rows.")
+        except Exception as e:
+            print(f"[dashboard] Failed to load TimeData.csv: {e}")
+            rdf = None
 
     html = generate_dashboard(df, rdf)
 
