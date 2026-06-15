@@ -1,6 +1,6 @@
 """
 build_dashboard.py — Reads docs/history.csv and generates docs/index.html
-with interactive Plotly charts for all 7 Postcrossing metrics.
+with an improved dark-themed interactive Plotly dashboard for all 7 metrics.
 """
 
 import os
@@ -17,52 +17,103 @@ CSV_PATH = os.path.join(DOCS_DIR, "history.csv")
 OUTPUT_PATH = os.path.join(DOCS_DIR, "index.html")
 
 METRICS = [
-    ("members",            "Members"),
-    ("countries",          "Countries"),
-    ("postcards_received", "Postcards Received"),
-    ("received_last_hour", "Received in the Last Hour"),
-    ("postcards_traveling","Postcards Traveling"),
-    ("km_traveled",        "KM Traveled"),
-    ("laps_around_world",  "Laps Around the World"),
+    ("members",             "Members",                  "#4FC3F7", "👥"),
+    ("countries",           "Countries",                "#81C784", "🌍"),
+    ("postcards_received",  "Postcards Received",       "#FFB74D", "📬"),
+    ("received_last_hour",  "Received Last Hour",       "#F06292", "⏱️"),
+    ("postcards_traveling", "Postcards Traveling",      "#CE93D8", "✈️"),
+    ("km_traveled",         "KM Traveled",              "#4DB6AC", "🗺️"),
+    ("laps_around_world",   "Laps Around the World",    "#FFF176", "🌐"),
 ]
 
-PLOTLY_CDN = (
-    "https://cdn.plot.ly/plotly-2.32.0.min.js"
-)
+PLOTLY_CDN = "https://cdn.plot.ly/plotly-2.32.0.min.js"
+
+CHART_BG   = "#1E2130"
+PAPER_BG   = "#1E2130"
+GRID_COLOR = "#2D3250"
+FONT_COLOR = "#E0E0E0"
 
 # ---------------------------------------------------------------------------
-# Chart building
+# Helpers
 # ---------------------------------------------------------------------------
 
-def build_chart_html(df: pd.DataFrame, col: str, title: str) -> str:
-    """Return the HTML <div> + inline script for one Plotly chart."""
+def fmt_number(val) -> str:
+    """Format a number with thousands separators, return '—' if missing."""
+    try:
+        f = float(val)
+        if f == int(f):
+            return f"{int(f):,}"
+        return f"{f:,.2f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
+    """Return Plotly chart HTML (no full page wrapper, no CDN re-include)."""
     fig = go.Figure()
 
-    fig.add_trace(
-        go.Scatter(
-            x=df["timestamp"],
-            y=df[col],
-            mode="lines+markers",
-            name=title,
-            line=dict(width=2),
-            marker=dict(size=4),
-        )
-    )
+    fig.add_trace(go.Scatter(
+        x=df["timestamp"],
+        y=df[col],
+        mode="lines+markers",
+        name=title,
+        line=dict(color=color, width=2.5, shape="spline"),
+        marker=dict(size=5, color=color, line=dict(width=1, color=CHART_BG)),
+        fill="tozeroy",
+        fillcolor=color.replace(")", ", 0.08)").replace("rgb", "rgba") if "rgb" in color
+                   else color + "14",  # hex alpha
+    ))
 
     fig.update_layout(
-        title=dict(text=title, font=dict(size=18)),
-        xaxis_title="Timestamp (UTC)",
-        yaxis_title=title,
+        paper_bgcolor=PAPER_BG,
+        plot_bgcolor=CHART_BG,
+        font=dict(color=FONT_COLOR, family="Inter, Segoe UI, sans-serif"),
+        title=dict(text=title, font=dict(size=16, color=color), x=0.02),
+        xaxis=dict(
+            title="",
+            showgrid=True, gridcolor=GRID_COLOR, gridwidth=1,
+            showline=False, zeroline=False,
+            tickfont=dict(size=11, color="#9E9E9E"),
+        ),
+        yaxis=dict(
+            title="",
+            showgrid=True, gridcolor=GRID_COLOR, gridwidth=1,
+            showline=False, zeroline=False,
+            tickfont=dict(size=11, color="#9E9E9E"),
+        ),
         hovermode="x unified",
-        height=380,
-        margin=dict(l=60, r=30, t=60, b=60),
-        template="plotly_white",
-        xaxis=dict(showgrid=True, gridcolor="#e5e5e5"),
-        yaxis=dict(showgrid=True, gridcolor="#e5e5e5"),
+        hoverlabel=dict(
+            bgcolor="#2D3250",
+            bordercolor=color,
+            font=dict(color="#FFFFFF", size=12),
+        ),
+        height=300,
+        margin=dict(l=50, r=20, t=50, b=40),
+        showlegend=False,
     )
 
-    # include_plotlyjs=False because we load the CDN once in the page header
-    return fig.to_html(full_html=False, include_plotlyjs=False, div_id=f"chart_{col}")
+    return fig.to_html(full_html=False, include_plotlyjs=False,
+                       div_id=f"chart_{col}", config={"displayModeBar": False})
+
+
+# ---------------------------------------------------------------------------
+# Stat cards
+# ---------------------------------------------------------------------------
+
+def build_stat_cards(df: pd.DataFrame) -> str:
+    if df.empty:
+        return ""
+    last = df.iloc[-1]
+    cards = ""
+    for col, title, color, icon in METRICS:
+        val = fmt_number(last.get(col))
+        cards += f"""
+        <div class="stat-card">
+          <div class="stat-icon">{icon}</div>
+          <div class="stat-value" style="color:{color}">{val}</div>
+          <div class="stat-label">{title}</div>
+        </div>"""
+    return cards
 
 
 # ---------------------------------------------------------------------------
@@ -70,147 +121,244 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str) -> str:
 # ---------------------------------------------------------------------------
 
 def generate_dashboard(df: pd.DataFrame) -> str:
-    """Build and return the complete HTML string."""
-
-    # Meta info
     total_records = len(df)
-    last_updated_raw = df["timestamp"].iloc[-1] if total_records > 0 else "N/A"
-    # Pretty-print the timestamp if possible
-    try:
-        last_updated = datetime.fromisoformat(
-            str(last_updated_raw).replace("Z", "+00:00")
-        ).strftime("%Y-%m-%d %H:%M UTC")
-    except (ValueError, AttributeError):
-        last_updated = str(last_updated_raw)
+    last_updated = "No data yet"
+    if total_records > 0:
+        try:
+            ts = str(df["timestamp"].iloc[-1]).replace("Z", "+00:00")
+            last_updated = datetime.fromisoformat(ts).strftime("%Y-%m-%d %H:%M UTC")
+        except (ValueError, AttributeError):
+            last_updated = str(df["timestamp"].iloc[-1])
 
-    # Build chart HTML for each metric
+    stat_cards_html = build_stat_cards(df)
+
     charts_html = ""
-    for col, title in METRICS:
+    for col, title, color, icon in METRICS:
         if col not in df.columns:
             continue
         chart_df = df[["timestamp", col]].dropna(subset=[col]).copy()
         if chart_df.empty:
-            charts_html += f'<p class="no-data">No data yet for: {title}</p>\n'
+            charts_html += f'<div class="no-data">{icon} No data yet for: {title}</div>\n'
             continue
-        # Ensure numeric type
         chart_df[col] = pd.to_numeric(chart_df[col], errors="coerce")
-        charts_html += f'<div class="chart-wrapper">\n'
-        charts_html += build_chart_html(chart_df, col, title)
-        charts_html += "\n</div>\n"
+        charts_html += f'<div class="chart-card">{build_chart_html(chart_df, col, title, color)}</div>\n'
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Postcrossing Statistics Dashboard</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Postcrossing Stats Dashboard</title>
   <script src="{PLOTLY_CDN}"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
-    *, *::before, *::after {{ box-sizing: border-box; }}
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
     body {{
-      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: #f7f8fc;
-      color: #333;
-      margin: 0;
-      padding: 0;
+      background: #12141F;
+      color: #E0E0E0;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      min-height: 100vh;
     }}
+
+    /* ── Header ── */
     header {{
-      background: linear-gradient(135deg, #e83e3e 0%, #c0392b 100%);
-      color: #fff;
-      padding: 2rem 1.5rem 1.5rem;
+      background: linear-gradient(135deg, #1a1d2e 0%, #12141F 100%);
+      border-bottom: 1px solid #2D3250;
+      padding: 2rem 2rem 1.6rem;
       text-align: center;
     }}
-    header h1 {{
-      margin: 0 0 0.4rem;
+    header .logo {{
       font-size: 2rem;
-      letter-spacing: 0.03em;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
     }}
+    header .logo span {{ color: #F06292; }}
     header p {{
-      margin: 0;
-      opacity: 0.85;
-      font-size: 0.95rem;
+      margin-top: 0.4rem;
+      color: #9E9E9E;
+      font-size: 0.9rem;
     }}
+    header .badge {{
+      display: inline-block;
+      margin-top: 0.8rem;
+      background: #2D3250;
+      border: 1px solid #3D4470;
+      border-radius: 20px;
+      padding: 0.25rem 0.9rem;
+      font-size: 0.78rem;
+      color: #B0BEC5;
+    }}
+    header .badge span {{ color: #4FC3F7; font-weight: 600; }}
+
+    /* ── Layout ── */
     main {{
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 1.5rem 1rem 3rem;
+      padding: 2rem 1.5rem 4rem;
     }}
-    .chart-wrapper {{
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-      margin-bottom: 1.8rem;
-      padding: 0.5rem 0.5rem 0;
+
+    /* ── Stat cards ── */
+    .stats-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }}
+    .stat-card {{
+      background: #1E2130;
+      border: 1px solid #2D3250;
+      border-radius: 12px;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      transition: transform 0.15s, border-color 0.15s;
+    }}
+    .stat-card:hover {{
+      transform: translateY(-2px);
+      border-color: #4D5580;
+    }}
+    .stat-icon {{ font-size: 1.6rem; margin-bottom: 0.5rem; }}
+    .stat-value {{ font-size: 1.35rem; font-weight: 700; line-height: 1.2; }}
+    .stat-label {{
+      margin-top: 0.35rem;
+      font-size: 0.72rem;
+      color: #9E9E9E;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }}
+
+    /* ── Section title ── */
+    .section-title {{
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #9E9E9E;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }}
+    .section-title::after {{
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #2D3250;
+    }}
+
+    /* ── Chart cards ── */
+    .chart-card {{
+      background: #1E2130;
+      border: 1px solid #2D3250;
+      border-radius: 12px;
+      padding: 0.75rem 0.5rem 0.25rem;
+      margin-bottom: 1.25rem;
       overflow: hidden;
     }}
     .no-data {{
-      background: #fff;
-      border-radius: 10px;
-      padding: 1.5rem;
-      color: #999;
+      background: #1E2130;
+      border: 1px dashed #2D3250;
+      border-radius: 12px;
+      padding: 2rem;
       text-align: center;
-      margin-bottom: 1.8rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      color: #9E9E9E;
+      margin-bottom: 1.25rem;
     }}
+
+    /* ── Download bar ── */
     .download-bar {{
       display: flex;
-      gap: 1rem;
+      align-items: center;
+      gap: 0.75rem;
       flex-wrap: wrap;
       margin-bottom: 2rem;
-      align-items: center;
     }}
-    .download-bar span {{
-      font-weight: 600;
-      color: #555;
+    .download-bar .label {{
+      font-size: 0.8rem;
+      color: #9E9E9E;
+      font-weight: 500;
     }}
     .download-bar a {{
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      background: #e83e3e;
-      color: #fff;
+      background: #2D3250;
+      color: #E0E0E0;
       text-decoration: none;
-      border-radius: 6px;
-      padding: 0.45rem 1rem;
-      font-size: 0.88rem;
-      font-weight: 600;
-      transition: background 0.2s;
+      border: 1px solid #3D4470;
+      border-radius: 8px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
     }}
-    .download-bar a:hover {{ background: #c0392b; }}
+    .download-bar a:hover {{ background: #3D4470; border-color: #5D6AA0; }}
+
+    /* ── Footer ── */
     footer {{
       margin-top: 3rem;
-      border-top: 1px solid #e0e0e0;
-      padding-top: 1rem;
-      font-size: 0.83rem;
-      color: #888;
-      text-align: center;
+      border-top: 1px solid #2D3250;
+      padding-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: #9E9E9E;
     }}
-    footer strong {{ color: #555; }}
+    footer strong {{ color: #B0BEC5; }}
+    footer a {{ color: #4FC3F7; text-decoration: none; }}
+    footer a:hover {{ text-decoration: underline; }}
+
+    @media (max-width: 600px) {{
+      .stats-grid {{ grid-template-columns: repeat(2, 1fr); }}
+      header .logo {{ font-size: 1.5rem; }}
+    }}
   </style>
 </head>
 <body>
-  <header>
-    <h1>📬 Postcrossing Statistics Dashboard</h1>
-    <p>Live metrics collected automatically every hour from postcrossing.com</p>
-  </header>
 
-  <main>
-    <div class="download-bar">
-      <span>Download data:</span>
-      <a href="history.csv" download>⬇ history.csv</a>
-      <a href="history.json" download>⬇ history.json</a>
+<header>
+  <div class="logo">📬 Post<span>crossing</span> Stats</div>
+  <p>Live metrics collected automatically every hour from postcrossing.com</p>
+  <div class="badge">
+    Last updated: <span>{last_updated}</span> &nbsp;·&nbsp; <span>{total_records}</span> records collected
+  </div>
+</header>
+
+<main>
+
+  <!-- Stat cards -->
+  <div class="section-title">Current Values</div>
+  <div class="stats-grid">
+    {stat_cards_html}
+  </div>
+
+  <!-- Download -->
+  <div class="download-bar">
+    <span class="label">Download data:</span>
+    <a href="history.csv" download>⬇ history.csv</a>
+    <a href="history.json" download>⬇ history.json</a>
+  </div>
+
+  <!-- Charts -->
+  <div class="section-title">Historical Trends</div>
+  {charts_html}
+
+  <footer>
+    <div>
+      <strong>Last updated:</strong> {last_updated} &nbsp;·&nbsp;
+      <strong>Records:</strong> {total_records}
     </div>
+    <div>
+      Data auto-collected via GitHub Actions ·
+      <a href="https://www.postcrossing.com/" target="_blank" rel="noopener">postcrossing.com</a>
+    </div>
+  </footer>
 
-    {charts_html}
-
-    <footer>
-      <p>
-        <strong>Last updated:</strong> {last_updated} &nbsp;|&nbsp;
-        <strong>Total records:</strong> {total_records}
-      </p>
-      <p>Data collected automatically via GitHub Actions · Hosted on GitHub Pages</p>
-    </footer>
-  </main>
+</main>
 </body>
 </html>
 """
@@ -225,8 +373,8 @@ def main() -> None:
     print(f"[dashboard] Reading {CSV_PATH}")
 
     if not os.path.exists(CSV_PATH):
-        print("[dashboard] history.csv not found — creating empty placeholder page.")
-        df = pd.DataFrame(columns=["timestamp"] + [col for col, _ in METRICS])
+        print("[dashboard] history.csv not found — creating placeholder page.")
+        df = pd.DataFrame(columns=["timestamp"] + [col for col, *_ in METRICS])
     else:
         df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
         print(f"[dashboard] Loaded {len(df)} records.")
