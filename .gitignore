@@ -8,7 +8,3 @@ env/
 
 # Kiro IDE
 .kiro/
-
-# docs/ is managed exclusively by GitHub Actions workflow
-# Do not commit docs/ locally to avoid conflicts
-docs/
