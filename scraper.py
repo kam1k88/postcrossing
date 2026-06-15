@@ -96,24 +96,13 @@ def parse_metrics(html: str | None) -> dict:
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text(separator=" ", strip=True)
 
-    # Debug: dump first 500 and 500 chars around "statistic" to see what Actions gets
-    print(f"[scraper] DEBUG html_len={len(html)} text_len={len(text)}")
-    print(f"[scraper] DEBUG text[:300]: {repr(text[:300])}")
-    idx_stat = text.lower().find("statistic")
-    if idx_stat >= 0:
-        print(f"[scraper] DEBUG statistic ctx: {repr(text[max(0,idx_stat-50):idx_stat+200])}")
-    # check all metric keywords
-    for kw in ("members", "countries", "postcards received", "km traveled", "km travelled", "traveling", "laps around"):
-        idx = text.lower().find(kw)
-        if idx >= 0:
-            print(f"[scraper] DEBUG '{kw}' at {idx}: {repr(text[max(0,idx-30):idx+50])}")
-
     # Pattern helper: find a number that follows a keyword phrase
     def find_number(pattern: str) -> str | None:
         m = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
         return m.group(1) if m else None
 
     # --- members ---
+    # Pattern: number directly before "members" (e.g. "805,820 members")
     result["members"] = _to_int(
         find_number(r"([\d,]+)\s+members")
     )
@@ -139,10 +128,16 @@ def parse_metrics(html: str | None) -> dict:
     )
 
     # --- km_traveled ---
-    # Match the number immediately preceding "km traveled" (no spaces in number)
-    result["km_traveled"] = _to_int(
-        find_number(r"([\d,]+)\s+km\s+traveled")
-    )
+    # Postcrossing shows "km traveled" or "miles traveled" depending on server geo
+    km_val = find_number(r"([\d,]+)\s+km\s+traveled")
+    if km_val is not None:
+        result["km_traveled"] = _to_int(km_val)
+    else:
+        miles_val = find_number(r"([\d,]+)\s+miles?\s+traveled")
+        if miles_val is not None:
+            miles_int = _to_int(miles_val)
+            # Convert miles → km
+            result["km_traveled"] = int(miles_int * 1.60934) if miles_int else None
 
     # --- laps_around_world ---
     result["laps_around_world"] = _to_float(
