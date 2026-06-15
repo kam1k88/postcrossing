@@ -103,37 +103,38 @@ def parse_metrics(html: str | None) -> dict:
 
     # --- members ---
     result["members"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+members")
+        find_number(r"([\d,]+)\s+members")
     )
 
     # --- countries ---
     result["countries"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+countries")
+        find_number(r"([\d,]+)\s+countries")
     )
 
     # --- postcards_received ---
     result["postcards_received"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+postcards?\s+received")
+        find_number(r"([\d,]+)\s+postcards?\s+received")
     )
 
     # --- received_last_hour ---
     result["received_last_hour"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+received\s+in\s+the\s+last\s+hour")
+        find_number(r"([\d,]+)\s+received\s+in\s+the\s+last\s+hour")
     )
 
     # --- postcards_traveling ---
     result["postcards_traveling"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+postcards?\s+traveling")
+        find_number(r"([\d,]+)\s+postcards?\s+traveling")
     )
 
     # --- km_traveled ---
+    # Match the number immediately preceding "km traveled" (no spaces in number)
     result["km_traveled"] = _to_int(
-        find_number(r"([\d,.\s]+)\s+km\s+traveled")
+        find_number(r"([\d,]+)\s+km\s+traveled")
     )
 
     # --- laps_around_world ---
     result["laps_around_world"] = _to_float(
-        find_number(r"([\d,.\s]+)\s+laps?\s+around\s+the\s+world")
+        find_number(r"([\d,]+)\s+laps?\s+around\s+the\s+world")
     )
 
     return result

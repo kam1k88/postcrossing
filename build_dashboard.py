@@ -39,10 +39,16 @@ FONT_COLOR = "#E0E0E0"
 
 def fmt_number(val) -> str:
     """Format a number with thousands separators, return '—' if missing."""
+    if val is None or (isinstance(val, float) and (val != val)):  # NaN check
+        return "—"
     try:
+        # Try int first to avoid float precision loss on large numbers
         f = float(val)
-        if f == int(f):
-            return f"{int(f):,}"
+        if f != f:  # NaN
+            return "—"
+        i = int(f)
+        if abs(f - i) < 0.5:
+            return f"{i:,}"
         return f"{f:,.2f}"
     except (TypeError, ValueError):
         return "—"
