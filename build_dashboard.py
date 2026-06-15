@@ -109,10 +109,11 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
 def build_stat_cards(df: pd.DataFrame) -> str:
     if df.empty:
         return ""
-    last = df.iloc[-1]
     cards = ""
     for col, title, color, icon in METRICS:
-        val = fmt_number(last.get(col))
+        # Use last non-null value so a single failed scrape doesn't blank the card
+        series = df[col].dropna() if col in df.columns else pd.Series([], dtype=float)
+        val = fmt_number(series.iloc[-1]) if not series.empty else "—"
         cards += f"""
         <div class="stat-card">
           <div class="stat-icon">{icon}</div>

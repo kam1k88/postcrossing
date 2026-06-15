@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Kiro IDE
+.kiro/
+
+# docs/ is managed exclusively by GitHub Actions workflow
+# Do not commit docs/ locally to avoid conflicts
+docs/
