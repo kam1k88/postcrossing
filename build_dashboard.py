@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 # ---------------------------------------------------------------------------
 DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
 CSV_PATH      = os.path.join(DOCS_DIR, "history.csv")
-REPORT_PATH   = os.path.join(DOCS_DIR, "TimeData.csv")
+REPORT_PATH   = os.path.join(DOCS_DIR, "received_report.csv")
 OUTPUT_PATH   = os.path.join(DOCS_DIR, "index.html")
 
 METRICS = [
@@ -236,9 +236,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     received_section = ""
     if rdf is not None and not rdf.empty:
         rdf2 = rdf.copy()
-        # Strip trailing " UTC" before parsing — pandas can't handle it directly
-        rdf2["datetime"] = rdf2["datetime"].str.replace(r"\s*UTC$", "", regex=True)
-        rdf2["datetime"] = pd.to_datetime(rdf2["datetime"], format="%Y-%m-%d %H:%M:%S", utc=True, errors="coerce")
         rdf2["postcards_received"] = pd.to_numeric(rdf2["postcards_received"], errors="coerce")
         rdf2 = rdf2.dropna(subset=["postcards_received", "datetime"])
         if not rdf2.empty:
@@ -524,24 +521,15 @@ def main() -> None:
     rdf = None
     if os.path.exists(REPORT_PATH):
         try:
-            raw = pd.read_csv(REPORT_PATH)
-            # TimeData.csv columns: Date (DD/MM/YY Www), UTC (HH:MM), XLS time, Received
-            # Build datetime column from Date + UTC
-            def parse_timedata_row(row):
-                date_str = str(row.get("Date", "")).strip()   # e.g. "01/09/19 Sun"
-                time_str = str(row.get("UTC", "")).strip()     # e.g. "23:15"
-                date_part = date_str.split()[0]                # "01/09/19"
-                d, m, y = date_part.split("/")
-                year = 2000 + int(y) if int(y) < 100 else int(y)
-                return f"{year:04d}-{int(m):02d}-{int(d):02d} {time_str}:00 UTC"
-
-            raw["datetime"] = raw.apply(parse_timedata_row, axis=1)
-            raw["postcards_received"] = pd.to_numeric(raw["Received"], errors="coerce")
-            rdf = raw[["datetime", "postcards_received"]].dropna(subset=["postcards_received"])
-            rdf = rdf[rdf["postcards_received"] > 0]  # skip the 0-row from 2005
-            print(f"[dashboard] Loaded {len(rdf)} TimeData rows.")
+            rdf = pd.read_csv(REPORT_PATH)
+            # received_report.csv has clean columns: datetime, postcards_received
+            rdf["datetime"] = rdf["datetime"].str.replace(r"\s*UTC$", "", regex=True)
+            rdf["datetime"] = pd.to_datetime(rdf["datetime"], format="%Y-%m-%d %H:%M:%S", utc=True, errors="coerce")
+            rdf["postcards_received"] = pd.to_numeric(rdf["postcards_received"], errors="coerce")
+            rdf = rdf.dropna(subset=["datetime", "postcards_received"])
+            print(f"[dashboard] Loaded {len(rdf)} received-report rows.")
         except Exception as e:
-            print(f"[dashboard] Failed to load TimeData.csv: {e}")
+            print(f"[dashboard] Failed to load received_report.csv: {e}")
             rdf = None
 
     html = generate_dashboard(df, rdf)
