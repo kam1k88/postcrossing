@@ -34,7 +34,11 @@ jobs:
       - name: Run scraper
         run: python scraper.py
 
-      # 5. Build the dashboard — regenerates docs/index.html
+      # 5. Build received report — picks 2 daily snapshots from history.csv
+      - name: Build received report
+        run: python build_received_report.py
+
+      # 6. Build the dashboard — regenerates docs/index.html
       - name: Build dashboard
         run: python build_dashboard.py
 

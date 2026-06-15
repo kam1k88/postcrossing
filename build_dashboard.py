@@ -1,6 +1,7 @@
 """
 build_dashboard.py — Reads docs/history.csv and generates docs/index.html
-with an improved dark-themed interactive Plotly dashboard for all 7 metrics.
+with an improved dark-themed interactive Plotly dashboard for all 7 metrics,
+plus a daily received-growth chart from docs/received_report.csv.
 """
 
 import os
@@ -13,7 +14,8 @@ import plotly.graph_objects as go
 # Configuration
 # ---------------------------------------------------------------------------
 DOCS_DIR = os.path.join(os.path.dirname(__file__), "docs")
-CSV_PATH = os.path.join(DOCS_DIR, "history.csv")
+CSV_PATH    = os.path.join(DOCS_DIR, "history.csv")
+REPORT_PATH = os.path.join(DOCS_DIR, "received_report.csv")
 OUTPUT_PATH = os.path.join(DOCS_DIR, "index.html")
 
 METRICS = [
@@ -109,6 +111,80 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Received-growth chart (with range buttons)
+# ---------------------------------------------------------------------------
+
+def build_received_chart(rdf: pd.DataFrame) -> str:
+    """Build the bi-daily postcards-received chart with day/week/month buttons."""
+    color = "#FFB74D"
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=rdf["datetime"],
+        y=rdf["postcards_received"],
+        mode="lines+markers",
+        name="Postcards Received",
+        line=dict(color=color, width=2.5, shape="spline"),
+        marker=dict(size=6, color=color, line=dict(width=1, color=CHART_BG)),
+        fill="tozeroy",
+        fillcolor=hex_to_rgba(color, 0.1),
+        hovertemplate="%{x}<br><b>%{y:,}</b><extra></extra>",
+    ))
+
+    fig.update_layout(
+        paper_bgcolor=PAPER_BG,
+        plot_bgcolor=CHART_BG,
+        font=dict(color=FONT_COLOR, family="Inter, Segoe UI, sans-serif"),
+        title=dict(
+            text="📬 Postcards Received — Growth (2× daily snapshots)",
+            font=dict(size=16, color=color), x=0.02
+        ),
+        xaxis=dict(
+            title="",
+            showgrid=True, gridcolor=GRID_COLOR, gridwidth=1,
+            showline=False, zeroline=False,
+            tickfont=dict(size=11, color="#9E9E9E"),
+            rangeselector=dict(
+                bgcolor="#2D3250",
+                activecolor="#4D5580",
+                bordercolor="#3D4470",
+                borderwidth=1,
+                font=dict(color="#E0E0E0", size=12),
+                buttons=[
+                    dict(count=1,  label="Day",   step="day",   stepmode="backward"),
+                    dict(count=7,  label="Week",  step="day",   stepmode="backward"),
+                    dict(count=1,  label="Month", step="month", stepmode="backward"),
+                    dict(step="all", label="All"),
+                ],
+                x=0.0, y=1.08,
+            ),
+            rangeslider=dict(visible=False),
+            type="date",
+        ),
+        yaxis=dict(
+            title="",
+            showgrid=True, gridcolor=GRID_COLOR, gridwidth=1,
+            showline=False, zeroline=False,
+            tickfont=dict(size=11, color="#9E9E9E"),
+            tickformat=",d",
+        ),
+        hovermode="x unified",
+        hoverlabel=dict(
+            bgcolor="#2D3250",
+            bordercolor=color,
+            font=dict(color="#FFFFFF", size=12),
+        ),
+        height=380,
+        margin=dict(l=50, r=20, t=80, b=40),
+        showlegend=False,
+    )
+
+    return fig.to_html(full_html=False, include_plotlyjs=False,
+                       div_id="chart_received_growth",
+                       config={"displayModeBar": False})
+
+
+# ---------------------------------------------------------------------------
 # Stat cards
 # ---------------------------------------------------------------------------
 
@@ -133,7 +209,7 @@ def build_stat_cards(df: pd.DataFrame) -> str:
 # Page assembly
 # ---------------------------------------------------------------------------
 
-def generate_dashboard(df: pd.DataFrame) -> str:
+def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str:
     total_records = len(df)
     last_updated = "No data yet"
     if total_records > 0:
@@ -155,6 +231,23 @@ def generate_dashboard(df: pd.DataFrame) -> str:
             continue
         chart_df[col] = pd.to_numeric(chart_df[col], errors="coerce")
         charts_html += f'<div class="chart-card">{build_chart_html(chart_df, col, title, color)}</div>\n'
+
+    # Received-growth section
+    received_section = ""
+    if rdf is not None and not rdf.empty:
+        rdf2 = rdf.copy()
+        rdf2["datetime"] = pd.to_datetime(rdf2["datetime"], utc=True)
+        rdf2["postcards_received"] = pd.to_numeric(rdf2["postcards_received"], errors="coerce")
+        rdf2 = rdf2.dropna(subset=["postcards_received"])
+        if not rdf2.empty:
+            received_section = f"""
+  <div class="section-title">Postcards Received — Daily Growth</div>
+  <div class="download-bar" style="margin-bottom:1rem;">
+    <span class="label">Download:</span>
+    <a href="received_report.csv" download class="btn-received"><span class="btn-icon">📊</span> received_report.csv</a>
+  </div>
+  <div class="chart-card">{build_received_chart(rdf2)}</div>
+"""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -322,6 +415,7 @@ def generate_dashboard(df: pd.DataFrame) -> str:
     .btn-csv     {{ background: linear-gradient(135deg, #1565C0, #1E88E5); color: #fff; }}
     .btn-json    {{ background: linear-gradient(135deg, #E65100, #FF7043); color: #fff; }}
     .btn-parquet {{ background: linear-gradient(135deg, #4A148C, #8E24AA); color: #fff; }}
+    .btn-received {{ background: linear-gradient(135deg, #1B5E20, #43A047); color: #fff; flex: unset; }}
     .btn-icon    {{ font-size: 1rem; }}
 
     @media (max-width: 480px) {{
@@ -388,6 +482,8 @@ def generate_dashboard(df: pd.DataFrame) -> str:
   <div class="section-title">Historical Trends</div>
   {charts_html}
 
+  {received_section}
+
   <footer>
     <div>
       <strong>Last updated:</strong> {last_updated} &nbsp;·&nbsp;
@@ -422,7 +518,13 @@ def main() -> None:
         df = pd.read_csv(CSV_PATH, parse_dates=["timestamp"])
         print(f"[dashboard] Loaded {len(df)} records.")
 
-    html = generate_dashboard(df)
+    # Load received report if available
+    rdf = None
+    if os.path.exists(REPORT_PATH):
+        rdf = pd.read_csv(REPORT_PATH)
+        print(f"[dashboard] Loaded {len(rdf)} received-report rows.")
+
+    html = generate_dashboard(df, rdf)
 
     os.makedirs(DOCS_DIR, exist_ok=True)
     with open(OUTPUT_PATH, "w", encoding="utf-8") as fh:
