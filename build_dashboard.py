@@ -279,7 +279,7 @@ def generate_dashboard(df: pd.DataFrame) -> str:
       display: flex;
       align-items: center;
       gap: 0.85rem;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       margin-bottom: 2rem;
     }}
     .download-bar .label {{
@@ -288,18 +288,22 @@ def generate_dashboard(df: pd.DataFrame) -> str:
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      white-space: nowrap;
       margin-right: 0.25rem;
     }}
     .download-bar a {{
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      justify-content: center;
+      gap: 0.4rem;
       text-decoration: none;
       border-radius: 10px;
       padding: 0.6rem 1.2rem;
       font-size: 0.88rem;
       font-weight: 600;
       letter-spacing: 0.01em;
+      white-space: nowrap;
+      flex: 1;
       transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
       box-shadow: 0 2px 8px rgba(0,0,0,0.35);
     }}
@@ -309,10 +313,22 @@ def generate_dashboard(df: pd.DataFrame) -> str:
       filter: brightness(1.12);
     }}
     .download-bar a:active {{ transform: translateY(0); }}
-    .btn-csv  {{ background: linear-gradient(135deg, #1565C0, #1E88E5); color: #fff; }}
-    .btn-json {{ background: linear-gradient(135deg, #E65100, #FF7043); color: #fff; }}
+    .btn-csv     {{ background: linear-gradient(135deg, #1565C0, #1E88E5); color: #fff; }}
+    .btn-json    {{ background: linear-gradient(135deg, #E65100, #FF7043); color: #fff; }}
     .btn-parquet {{ background: linear-gradient(135deg, #4A148C, #8E24AA); color: #fff; }}
-    .btn-icon {{ font-size: 1rem; }}
+    .btn-icon    {{ font-size: 1rem; }}
+
+    @media (max-width: 480px) {{
+      .download-bar {{ gap: 0.5rem; }}
+      .download-bar .label {{ display: none; }}
+      .download-bar a {{
+        padding: 0.55rem 0.5rem;
+        font-size: 0.78rem;
+        gap: 0.25rem;
+        border-radius: 8px;
+      }}
+      .btn-icon {{ font-size: 0.85rem; }}
+    }}
 
     /* ── Footer ── */
     footer {{
