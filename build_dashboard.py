@@ -236,9 +236,11 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     received_section = ""
     if rdf is not None and not rdf.empty:
         rdf2 = rdf.copy()
-        rdf2["datetime"] = pd.to_datetime(rdf2["datetime"], utc=True)
+        # Strip trailing " UTC" before parsing — pandas can't handle it directly
+        rdf2["datetime"] = rdf2["datetime"].str.replace(r"\s*UTC$", "", regex=True)
+        rdf2["datetime"] = pd.to_datetime(rdf2["datetime"], format="%Y-%m-%d %H:%M:%S", utc=True, errors="coerce")
         rdf2["postcards_received"] = pd.to_numeric(rdf2["postcards_received"], errors="coerce")
-        rdf2 = rdf2.dropna(subset=["postcards_received"])
+        rdf2 = rdf2.dropna(subset=["postcards_received", "datetime"])
         if not rdf2.empty:
             received_section = f"""
   <div class="section-title">Postcards Received — Daily Growth</div>

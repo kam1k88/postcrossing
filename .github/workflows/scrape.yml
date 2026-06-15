@@ -34,9 +34,15 @@ jobs:
       - name: Run scraper
         run: python scraper.py
 
-      # 5. Build received report — picks 2 daily snapshots from history.csv
-      - name: Build received report
-        run: python build_received_report.py
+      # 5. Convert TimeData.csv → received_report.csv (historical growth data)
+      #    Only runs if docs/TimeData.csv exists in the repo
+      - name: Convert TimeData.csv to received_report.csv
+        run: |
+          if [ -f docs/TimeData.csv ]; then
+            python convert_timedata.py
+          else
+            echo "docs/TimeData.csv not found — skipping conversion"
+          fi
 
       # 6. Build the dashboard — regenerates docs/index.html
       - name: Build dashboard
