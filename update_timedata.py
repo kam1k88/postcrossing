@@ -17,15 +17,26 @@ from datetime import datetime, timezone
 import requests
 from bs4 import BeautifulSoup
 
+try:
+    from fake_useragent import UserAgent as _UA
+    _ua_gen = _UA()
+    def _random_ua() -> str:
+        return _ua_gen.random
+except Exception:
+    import random as _random
+    _FALLBACK_UAS = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+    ]
+    def _random_ua() -> str:
+        return _random.choice(_FALLBACK_UAS)
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 URL        = "https://www.postcrossing.com/"
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/125.0.0.0 Safari/537.36"
-)
 TIMEOUT    = 10
 
 DOCS_DIR      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
@@ -41,7 +52,7 @@ def fetch_received() -> int | None:
     """Fetch postcards_received from postcrossing.com. Returns int or None."""
     time.sleep(random.uniform(1, 3))
     try:
-        resp = requests.get(URL, headers={"User-Agent": USER_AGENT}, timeout=TIMEOUT)
+        resp = requests.get(URL, headers={"User-Agent": _random_ua()}, timeout=TIMEOUT)
         resp.raise_for_status()
     except requests.RequestException as exc:
         print(f"[update_timedata] Network error: {exc}")
