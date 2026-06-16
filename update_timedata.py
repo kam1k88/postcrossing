@@ -22,8 +22,9 @@ from bs4 import BeautifulSoup
 # ---------------------------------------------------------------------------
 URL        = "https://www.postcrossing.com/"
 USER_AGENT = (
-    "Mozilla/5.0 (compatible; PostcrossingBot/1.0; "
-    "+https://github.com/kam1k88/postcrossing)"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/125.0.0.0 Safari/537.36"
 )
 TIMEOUT    = 10
 
