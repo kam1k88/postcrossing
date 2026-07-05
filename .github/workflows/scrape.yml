@@ -43,8 +43,7 @@ jobs:
       - name: Upload to Hugging Face
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python -c "import os; from huggingface_hub import HfApi; api = HfApi(); api.upload_file(path_or_fileobj='docs/TimeData.csv', path_in_repo='TimeData.csv', repo_id='kamjke/postcrossing-daily-growth', repo_type='dataset', token=os.environ['HF_TOKEN'], commit_message='Automated update from GitHub Actions'); print('✅ Uploaded to Hugging Face')"
+        run: python upload_to_hf.py
 
       # 7. Build the dashboard — regenerates docs/index.html
       - name: Build dashboard
