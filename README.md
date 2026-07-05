@@ -6,11 +6,13 @@ An autonomous project that collects and visualises live statistics from [postcro
 
 ## What it does
 
-Every hour a GitHub Actions workflow:
+Twice daily (06:00 UTC and 18:00 UTC) a GitHub Actions workflow:
 1. Parses 7 key metrics from the Postcrossing homepage.
 2. Appends the new record to `docs/history.csv` and `docs/history.json`.
-3. Regenerates `docs/index.html` — an interactive Plotly dashboard.
-4. Commits and pushes the updated files to the `main` branch.
+3. Updates `docs/TimeData.csv` from the live Postcrossing site.
+4. **Automatically uploads `TimeData.csv` to Hugging Face** dataset: [kamjke/postcrossing-daily-growth](https://huggingface.co/datasets/kamjke/postcrossing-daily-growth)
+5. Regenerates `docs/index.html` — an interactive Plotly dashboard.
+6. Commits and pushes the updated files to the `main` branch.
 
 ---
 
@@ -50,6 +52,15 @@ Every hour a GitHub Actions workflow:
   ]
   ```
 
+- **`docs/TimeData.csv`** — Time series data of postcards received (updated twice daily).
+  Also available on [🤗 Hugging Face](https://huggingface.co/datasets/kamjke/postcrossing-daily-growth/raw/main/TimeData.csv)
+
+  ```
+  datetime,postcards_received
+  2019-09-01 23:15:00,53518665
+  2026-07-05 16:38:16,87351335
+  ```
+
 ---
 
 ## Requirements
@@ -60,6 +71,9 @@ Every hour a GitHub Actions workflow:
   - `beautifulsoup4` — HTML parsing
   - `pandas` — CSV/DataFrame handling
   - `plotly` — Interactive charts
+  - `pyarrow` — Parquet file support
+  - `fake-useragent` — User-Agent generation
+  - `huggingface_hub` — Upload to Hugging Face datasets
 
 ---
 
@@ -101,6 +115,22 @@ https://kam1k88.github.io/postcrossing/
 2. Under **Workflow permissions**, select **Read and write permissions**.
 3. Click **Save**.
 
+### 6. Set up Hugging Face integration (optional)
+
+To enable automatic uploads to Hugging Face:
+
+1. Create a Hugging Face account at https://huggingface.co/
+2. Create a new dataset: https://huggingface.co/new-dataset
+3. Generate a write token: https://huggingface.co/settings/tokens
+4. Add the token to GitHub Secrets:
+   - Go to **Settings** → **Secrets and variables** → **Actions**
+   - Click **New repository secret**
+   - Name: `HF_TOKEN`
+   - Value: your Hugging Face token
+5. Update `upload_to_hf.py` with your dataset name
+
+**Verification:** Run `python verify_sync.py` to check if GitHub and Hugging Face datasets are in sync.
+
 ---
 
 ## Triggering a Manual Run
@@ -117,9 +147,11 @@ The workflow will execute immediately and push updated data and dashboard files.
 
 ```bash
 pip install -r requirements.txt
-python scraper.py        # Fetches and saves a new record
-python build_dashboard.py  # Rebuilds docs/index.html
-open docs/index.html     # View the dashboard in your browser
+python scraper.py            # Fetches and saves a new record
+python update_timedata.py    # Updates TimeData.csv from live site
+python build_dashboard.py    # Rebuilds docs/index.html
+python verify_sync.py        # Verifies sync with Hugging Face
+open docs/index.html         # View the dashboard in your browser
 ```
 
 ---
@@ -130,16 +162,31 @@ open docs/index.html     # View the dashboard in your browser
 .
 ├── scraper.py               # Fetches metrics and updates history files
 ├── build_dashboard.py       # Generates the interactive HTML dashboard
+├── update_timedata.py       # Updates TimeData.csv from live site
+├── upload_to_hf.py          # Uploads TimeData.csv to Hugging Face
+├── verify_sync.py           # Verifies GitHub ↔ Hugging Face sync
 ├── requirements.txt         # Python dependencies
 ├── README.md                # This file
+├── SYNC_STATUS.md           # Latest sync status report
 ├── .github/
 │   └── workflows/
-│       └── scrape.yml       # GitHub Actions workflow (hourly + manual)
+│       └── scrape.yml       # GitHub Actions workflow (twice daily + manual)
 └── docs/                    # Published via GitHub Pages
     ├── index.html           # Interactive dashboard (auto-generated)
     ├── history.csv          # Full metric history in CSV format
-    └── history.json         # Full metric history in JSON format
+    ├── history.json         # Full metric history in JSON format
+    ├── history.parquet      # Full metric history in Parquet format
+    └── TimeData.csv         # Time series (synced with Hugging Face)
 ```
+
+---
+
+## External Links
+
+- 📊 **Live Dashboard:** https://kam1k88.github.io/postcrossing/
+- 🤗 **Hugging Face Dataset:** https://huggingface.co/datasets/kamjke/postcrossing-daily-growth
+- 📦 **Direct CSV Download:** https://huggingface.co/datasets/kamjke/postcrossing-daily-growth/raw/main/TimeData.csv
+- 🔄 **Sync Status:** See [SYNC_STATUS.md](SYNC_STATUS.md)
 
 ---
 
