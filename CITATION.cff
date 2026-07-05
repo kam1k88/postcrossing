@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this dataset or forecasting model, please cite it as below."
+type: dataset
+title: "Postcrossing Daily Growth Dataset"
+authors:
+  - family-names: "Maksimov"
+    given-names: "Arkadiy"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+repository-code: "https://github.com/kam1k88/postcrossing"
+url: "https://kam1k88.github.io/postcrossing/"
+abstract: "An automated system for collecting and analyzing Postcrossing statistics with daily adaptive Bayesian forecasting for milestone prediction."
+keywords:
+  - postcrossing
+  - time-series
+  - bayesian-forecasting
+  - prophet
+  - data-collection
+  - automation
+license: MIT
+version: 1.0.0
+date-released: 2026-07-05
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.21207169"
+    description: "Research paper on Zenodo"
+preferred-citation:
+  type: article
+  title: "Adaptive Bayesian Forecasting for Postcrossing Growth"
+  authors:
+    - family-names: "Maksimov"
+      given-names: "Arkadiy"
+  year: 2026
+  doi: "10.5281/zenodo.21207169"
+  url: "https://doi.org/10.5281/zenodo.21207169"
