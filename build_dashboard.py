@@ -151,10 +151,10 @@ def build_received_chart(rdf: pd.DataFrame) -> str:
                 borderwidth=1,
                 font=dict(color="#E0E0E0", size=12),
                 buttons=[
-                    dict(count=1,  label="Day",   step="day",   stepmode="backward"),
-                    dict(count=7,  label="Week",  step="day",   stepmode="backward"),
-                    dict(count=1,  label="Month", step="month", stepmode="backward"),
                     dict(step="all", label="All"),
+                    dict(count=4,  label="4y",   step="year",  stepmode="backward"),
+                    dict(count=2,  label="2y",   step="year",  stepmode="backward"),
+                    dict(count=1,  label="Last year", step="year", stepmode="backward"),
                 ],
                 x=0.0, y=1.08,
             ),
@@ -244,19 +244,23 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
             with open(forecast_file, 'r', encoding='utf-8') as f:
                 lines = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
                 if len(lines) >= 2:
-                    # Get last two lines
-                    analysis_line = lines[-2]
+                    # Get last two lines - we only need the forecast line (second one)
                     forecast_line = lines[-1]
                     forecast_html = f"""
   <div class="forecast-box">
     <div class="forecast-icon">🔮</div>
     <div class="forecast-content">
-      <div class="forecast-title">Прогноз достижения 88 млн открыток</div>
-      <div class="forecast-analysis">{analysis_line}</div>
+      <div class="forecast-title">Финальный прогноз достижения 88 млн:</div>
       <div class="forecast-prediction">{forecast_line}</div>
-      <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank" class="forecast-link">
-        📊 Ноутбук с анализом на Kaggle
-      </a>
+      <div class="forecast-links">
+        <a href="https://doi.org/10.5281/zenodo.21207169" target="_blank" class="forecast-link">
+          📄 Ссылка на статью
+        </a>
+        <span class="forecast-divider">•</span>
+        <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank" class="forecast-link">
+          📊 Ноутбук с анализом на Kaggle
+        </a>
+      </div>
     </div>
   </div>
 """
@@ -276,7 +280,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     <span class="label">Download:</span>
     <a href="TimeData.csv" download class="btn-received"><span class="btn-icon">📊</span> TimeData.csv</a>
   </div>
-  {forecast_html}
   <div class="chart-card">{build_received_chart(rdf2)}</div>
 """
 
@@ -477,18 +480,22 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
       margin-bottom: 0.8rem;
       letter-spacing: -0.01em;
     }}
-    .forecast-analysis {{
-      font-size: 0.85rem;
-      color: #B0BEC5;
-      margin-bottom: 0.5rem;
-      line-height: 1.5;
-    }}
     .forecast-prediction {{
       font-size: 0.95rem;
       color: #E0E0E0;
       font-weight: 600;
       margin-bottom: 0.8rem;
       line-height: 1.5;
+    }}
+    .forecast-links {{
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }}
+    .forecast-divider {{
+      color: #4D5580;
+      font-size: 0.85rem;
     }}
     .forecast-link {{
       display: inline-flex;
@@ -584,6 +591,8 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
   {charts_html}
 
   {received_section}
+
+  {forecast_html}
 
   <footer>
     <div>
