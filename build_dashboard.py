@@ -221,16 +221,47 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
 
     stat_cards_html = build_stat_cards(df)
 
+    # Only build "Received Last Hour" chart
     charts_html = ""
-    for col, title, color, icon in METRICS:
-        if col not in df.columns:
-            continue
-        chart_df = df[["timestamp", col]].dropna(subset=[col]).copy()
-        if chart_df.empty:
-            charts_html += f'<div class="no-data">{icon} No data yet for: {title}</div>\n'
-            continue
-        chart_df[col] = pd.to_numeric(chart_df[col], errors="coerce")
-        charts_html += f'<div class="chart-card">{build_chart_html(chart_df, col, title, color)}</div>\n'
+    received_last_hour_col = "received_last_hour"
+    received_last_hour_title = "Received Last Hour"
+    received_last_hour_color = "#F06292"
+    received_last_hour_icon = "⏱️"
+    
+    if received_last_hour_col in df.columns:
+        chart_df = df[["timestamp", received_last_hour_col]].dropna(subset=[received_last_hour_col]).copy()
+        if not chart_df.empty:
+            chart_df[received_last_hour_col] = pd.to_numeric(chart_df[received_last_hour_col], errors="coerce")
+            charts_html = f'<div class="chart-card">{build_chart_html(chart_df, received_last_hour_col, received_last_hour_title, received_last_hour_color)}</div>\n'
+        else:
+            charts_html = f'<div class="no-data">{received_last_hour_icon} No data yet for: {received_last_hour_title}</div>\n'
+    
+    # Read forecast data
+    forecast_html = ""
+    forecast_file = os.path.join(DOCS_DIR, "forecast_results.txt")
+    if os.path.exists(forecast_file):
+        try:
+            with open(forecast_file, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
+                if len(lines) >= 2:
+                    # Get last two lines
+                    analysis_line = lines[-2]
+                    forecast_line = lines[-1]
+                    forecast_html = f"""
+  <div class="forecast-box">
+    <div class="forecast-icon">🔮</div>
+    <div class="forecast-content">
+      <div class="forecast-title">Прогноз достижения 88 млн открыток</div>
+      <div class="forecast-analysis">{analysis_line}</div>
+      <div class="forecast-prediction">{forecast_line}</div>
+      <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank" class="forecast-link">
+        📊 Ноутбук с анализом на Kaggle
+      </a>
+    </div>
+  </div>
+"""
+        except Exception as e:
+            print(f"[dashboard] Failed to load forecast: {e}")
 
     # Received-growth section
     received_section = ""
@@ -245,6 +276,7 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     <span class="label">Download:</span>
     <a href="TimeData.csv" download class="btn-received"><span class="btn-icon">📊</span> TimeData.csv</a>
   </div>
+  {forecast_html}
   <div class="chart-card">{build_received_chart(rdf2)}</div>
 """
 
@@ -416,6 +448,76 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     .btn-parquet {{ background: linear-gradient(135deg, #4A148C, #8E24AA); color: #fff; }}
     .btn-received {{ background: linear-gradient(135deg, #1B5E20, #43A047); color: #fff; flex: unset; }}
     .btn-icon    {{ font-size: 1rem; }}
+
+    /* ── Forecast box ── */
+    .forecast-box {{
+      background: linear-gradient(135deg, #1E2845 0%, #1a1d2e 100%);
+      border: 1px solid #4D5580;
+      border-left: 4px solid #FFB74D;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }}
+    .forecast-icon {{
+      font-size: 2.5rem;
+      flex-shrink: 0;
+      line-height: 1;
+    }}
+    .forecast-content {{
+      flex: 1;
+    }}
+    .forecast-title {{
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #FFB74D;
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.01em;
+    }}
+    .forecast-analysis {{
+      font-size: 0.85rem;
+      color: #B0BEC5;
+      margin-bottom: 0.5rem;
+      line-height: 1.5;
+    }}
+    .forecast-prediction {{
+      font-size: 0.95rem;
+      color: #E0E0E0;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      line-height: 1.5;
+    }}
+    .forecast-link {{
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: #4FC3F7;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }}
+    .forecast-link:hover {{
+      color: #81D4FA;
+      text-decoration: underline;
+    }}
+
+    @media (max-width: 600px) {{
+      .forecast-box {{
+        flex-direction: column;
+        gap: 0.8rem;
+        padding: 1.2rem;
+      }}
+      .forecast-icon {{
+        font-size: 2rem;
+      }}
+      .forecast-title {{
+        font-size: 1rem;
+      }}
+    }}
 
     @media (max-width: 480px) {{
       .download-bar {{ gap: 0.5rem; }}
