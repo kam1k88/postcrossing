@@ -1,6 +1,18 @@
 # 📬 Postcrossing Statistics Dashboard
 
+[![Live Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://kam1k88.github.io/postcrossing/)
+[![Hugging Face](https://img.shields.io/badge/🤗-Dataset-yellow)](https://huggingface.co/datasets/kamjke/postcrossing-daily-growth)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21207169-blue)](https://doi.org/10.5281/zenodo.21207169)
+[![Kaggle](https://img.shields.io/badge/Kaggle-Notebook-20beff)](https://www.kaggle.com/code/arkadymaximov/ctulhufagn2)
+
 An autonomous project that collects and visualises live statistics from [postcrossing.com](https://www.postcrossing.com/) — powered by GitHub Actions and published via GitHub Pages for free.
+
+**✨ Features:**
+- 📊 Interactive dashboard with time series visualizations
+- 🤖 Automated data collection (2× daily)
+- 🔮 Bayesian forecasting model for 88M milestone prediction
+- 📄 Published research paper with methodology
+- 🤗 Open dataset on Hugging Face
 
 ---
 
@@ -13,6 +25,49 @@ Twice daily (06:00 UTC and 18:00 UTC) a GitHub Actions workflow:
 4. **Automatically uploads `TimeData.csv` to Hugging Face** dataset: [kamjke/postcrossing-daily-growth](https://huggingface.co/datasets/kamjke/postcrossing-daily-growth)
 5. Regenerates `docs/index.html` — an interactive Plotly dashboard.
 6. Commits and pushes the updated files to the `main` branch.
+
+---
+
+## 🔮 Adaptive Forecasting Model
+
+This project includes a **daily adaptive forecasting model** that predicts when Postcrossing will reach 88 million postcards.
+
+### Research Paper
+
+📄 **"Adaptive Bayesian Forecasting for Postcrossing Growth"**  
+Published in Zenodo: [doi:10.5281/zenodo.21207169](https://doi.org/10.5281/zenodo.21207169)
+
+The paper describes:
+- Bayesian time series modeling with Prophet
+- Milestone-based calibration (54M–87M postcards)
+- Anomaly detection and adaptive forecasting
+- Daily updates based on live data
+
+### Forecasting Notebook
+
+📊 **Interactive Jupyter Notebook:** [`ctulhufagn2.ipynb`](ctulhufagn2.ipynb)  
+🌐 **Live on Kaggle:** [arkadymaximov/ctulhufagn2](https://www.kaggle.com/code/arkadymaximov/ctulhufagn2)
+
+The notebook:
+- Loads TimeData.csv from Hugging Face
+- Fits a Bayesian model with milestone calibration
+- Detects anomalies in growth patterns
+- Generates daily adaptive forecasts
+
+**Current Forecast:** View on the [Live Dashboard](https://kam1k88.github.io/postcrossing/)
+
+### How to Run Forecast
+
+```bash
+# Option 1: Run locally
+jupyter notebook ctulhufagn2.ipynb
+
+# Option 2: Add forecast to dashboard
+python add_forecast.py "YYYY-MM-DD HH:MM:SS"
+python build_dashboard.py
+```
+
+See [FORECAST_GUIDE.md](FORECAST_GUIDE.md) for detailed instructions.
 
 ---
 
@@ -183,10 +238,20 @@ open docs/index.html         # View the dashboard in your browser
 
 ## External Links
 
+### Live Resources
 - 📊 **Live Dashboard:** https://kam1k88.github.io/postcrossing/
 - 🤗 **Hugging Face Dataset:** https://huggingface.co/datasets/kamjke/postcrossing-daily-growth
 - 📦 **Direct CSV Download:** https://huggingface.co/datasets/kamjke/postcrossing-daily-growth/raw/main/TimeData.csv
-- 🔄 **Sync Status:** See [SYNC_STATUS.md](SYNC_STATUS.md)
+
+### Research & Analysis
+- 📄 **Research Paper:** https://doi.org/10.5281/zenodo.21207169
+- 📊 **Forecasting Notebook (Kaggle):** https://www.kaggle.com/code/arkadymaximov/ctulhufagn2
+- 📓 **Notebook (GitHub):** [ctulhufagn2.ipynb](ctulhufagn2.ipynb)
+
+### Documentation
+- 🔄 **Sync Status:** [SYNC_STATUS.md](SYNC_STATUS.md)
+- 🔮 **Forecast Guide:** [FORECAST_GUIDE.md](FORECAST_GUIDE.md)
+- 🚀 **Quick Start:** [QUICK_START_FORECAST.md](QUICK_START_FORECAST.md)
 
 ---
 
