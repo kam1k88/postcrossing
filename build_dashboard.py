@@ -579,8 +579,8 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     {stat_cards_html}
   </div>
 
-  <!-- Charts -->
-  <div class="section-title">Historical Trends</div>
+  <!-- Received Last Hour Chart -->
+  <div class="section-title">Received Last Hour</div>
   {charts_html}
 
   {received_section}
