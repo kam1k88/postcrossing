@@ -276,11 +276,15 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
       <div class="forecast-title">Ежедневный адаптивный прогноз достижения 88М: {forecast_date}</div>
       <div class="forecast-links">
         <a href="https://doi.org/10.5281/zenodo.21207169" target="_blank" class="forecast-link">
-          📄 Ссылка на статью
+          📄 Article
         </a>
         <span class="forecast-divider">•</span>
         <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank" class="forecast-link">
-          📊 Ноутбук с анализом на Kaggle
+          📊 Notebook
+        </a>
+        <span class="forecast-divider">•</span>
+        <a href="https://github.com/kam1k88/postcrossing" target="_blank" class="forecast-link">
+          ⭐ GitHub
         </a>
       </div>
     </div>
@@ -657,8 +661,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
     <div>
       Data auto-collected via GitHub Actions ·
       <a href="https://www.postcrossing.com/" target="_blank" rel="noopener">postcrossing.com</a>
-      &nbsp;·&nbsp;
-      <a href="https://github.com/kam1k88/postcrossing" target="_blank" rel="noopener">⭐ GitHub Repository</a>
     </div>
   </footer>
 
