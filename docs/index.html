@@ -234,26 +234,19 @@
     .forecast-links {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
     }
-    .forecast-divider {
-      color: #4D5580;
-      font-size: 0.85rem;
-    }
-    .forecast-link {
+    .forecast-links a {
       display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      color: #4FC3F7;
-      text-decoration: none;
-      font-size: 0.85rem;
-      font-weight: 500;
-      transition: color 0.15s;
+      transition: opacity 0.15s, transform 0.15s;
     }
-    .forecast-link:hover {
-      color: #81D4FA;
-      text-decoration: underline;
+    .forecast-links a:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+    .forecast-links img {
+      height: 20px;
     }
 
     @media (max-width: 600px) {
@@ -340,16 +333,14 @@
     <div class="forecast-content">
       <div class="forecast-title">Ежедневный адаптивный прогноз достижения 88М: 2026-08-29 04:52:17</div>
       <div class="forecast-links">
-        <a href="https://doi.org/10.5281/zenodo.21207169" target="_blank" class="forecast-link">
-          📄 Article
+        <a href="https://doi.org/10.5281/zenodo.21207169" target="_blank">
+          <img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21207169-blue?style=flat-square" alt="DOI"/>
         </a>
-        <span class="forecast-divider">•</span>
-        <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank" class="forecast-link">
-          📊 Notebook
+        <a href="https://www.kaggle.com/code/arkadymaximov/ctulhufagn2" target="_blank">
+          <img src="https://img.shields.io/badge/Kaggle-Notebook-20beff?style=flat-square&logo=kaggle&logoColor=white" alt="Kaggle"/>
         </a>
-        <span class="forecast-divider">•</span>
-        <a href="https://github.com/kam1k88/postcrossing" target="_blank" class="forecast-link">
-          ⭐ GitHub
+        <a href="https://github.com/kam1k88/postcrossing" target="_blank">
+          <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github&logoColor=white" alt="GitHub"/>
         </a>
       </div>
     </div>
