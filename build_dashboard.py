@@ -88,6 +88,23 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
             showgrid=True, gridcolor=GRID_COLOR, gridwidth=1,
             showline=False, zeroline=False,
             tickfont=dict(size=11, color="#9E9E9E"),
+            rangeselector=dict(
+                bgcolor="#2D3250",
+                activecolor="#4D5580",
+                bordercolor="#3D4470",
+                borderwidth=1,
+                font=dict(color="#E0E0E0", size=12),
+                buttons=[
+                    dict(count=1, label="Year", step="year", stepmode="backward"),
+                    dict(count=3, label="3m", step="month", stepmode="backward"),
+                    dict(count=1, label="1m", step="month", stepmode="backward"),
+                    dict(count=14, label="2w", step="day", stepmode="backward"),
+                    dict(count=7, label="1w", step="day", stepmode="backward"),
+                ],
+                x=0.0, y=1.08,
+            ),
+            rangeslider=dict(visible=False),
+            type="date",
         ),
         yaxis=dict(
             title="",
@@ -101,8 +118,8 @@ def build_chart_html(df: pd.DataFrame, col: str, title: str, color: str) -> str:
             bordercolor=color,
             font=dict(color="#FFFFFF", size=12),
         ),
-        height=300,
-        margin=dict(l=50, r=20, t=50, b=40),
+        height=330,
+        margin=dict(l=50, r=20, t=80, b=40),
         showlegend=False,
     )
 
