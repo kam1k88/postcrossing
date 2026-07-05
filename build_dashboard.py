@@ -261,14 +261,19 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
             with open(forecast_file, 'r', encoding='utf-8') as f:
                 lines = [line.strip() for line in f.readlines() if line.strip() and not line.startswith('#')]
                 if len(lines) >= 2:
-                    # Get last two lines - we only need the forecast line (second one)
+                    # Get last line - extract only the date part
                     forecast_line = lines[-1]
+                    # Extract date from "Финальный прогноз достижения 88 млн: DATE"
+                    if ":" in forecast_line:
+                        forecast_date = forecast_line.split(":", 1)[1].strip()
+                    else:
+                        forecast_date = forecast_line
+                    
                     forecast_html = f"""
   <div class="forecast-box">
     <div class="forecast-icon">🔮</div>
     <div class="forecast-content">
-      <div class="forecast-title">Финальный прогноз достижения 88 млн:</div>
-      <div class="forecast-prediction">{forecast_line}</div>
+      <div class="forecast-title">Ежедневный адаптивный прогноз достижения 88М: {forecast_date}</div>
       <div class="forecast-links">
         <a href="https://doi.org/10.5281/zenodo.21207169" target="_blank" class="forecast-link">
           📄 Ссылка на статью
@@ -293,10 +298,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
         if not rdf2.empty:
             received_section = f"""
   <div class="section-title">Postcards Received — Daily Growth</div>
-  <div class="download-bar" style="margin-bottom:1rem;">
-    <span class="label">Download:</span>
-    <a href="TimeData.csv" download class="btn-received"><span class="btn-icon">📊</span> TimeData.csv</a>
-  </div>
   <div class="chart-card">{build_received_chart(rdf2)}</div>
 """
 
@@ -349,6 +350,42 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
       color: #B0BEC5;
     }}
     header .badge span {{ color: #4FC3F7; font-weight: 600; }}
+
+    /* ── Layout ── */
+    main {{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }}
+
+    /* ── Big TimeData button ── */
+    .big-download {{
+      text-align: center;
+      margin-bottom: 2rem;
+    }}
+    .big-download a {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      background: linear-gradient(135deg, #1B5E20, #43A047);
+      color: #fff;
+      border-radius: 14px;
+      padding: 1.2rem 2.5rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }}
+    .big-download a:hover {{
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      filter: brightness(1.15);
+    }}
+    .big-download a:active {{ transform: translateY(0); }}
+    .big-download .icon {{ font-size: 1.5rem; }}
 
     /* ── Layout ── */
     main {{
@@ -497,13 +534,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
       margin-bottom: 0.8rem;
       letter-spacing: -0.01em;
     }}
-    .forecast-prediction {{
-      font-size: 0.95rem;
-      color: #E0E0E0;
-      font-weight: 600;
-      margin-bottom: 0.8rem;
-      line-height: 1.5;
-    }}
     .forecast-links {{
       display: flex;
       align-items: center;
@@ -589,6 +619,22 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
 
 <main>
 
+  <!-- Big TimeData Download Button -->
+  <div class="big-download">
+    <a href="TimeData.csv" download>
+      <span class="icon">📊</span>
+      <span>Скачать TimeData.csv</span>
+    </a>
+  </div>
+
+  <!-- Received Last Hour Chart -->
+  <div class="section-title">Received Last Hour</div>
+  {charts_html}
+
+  {received_section}
+
+  {forecast_html}
+
   <!-- Download -->
   <div class="download-bar">
     <span class="label">Download:</span>
@@ -602,14 +648,6 @@ def generate_dashboard(df: pd.DataFrame, rdf: pd.DataFrame | None = None) -> str
   <div class="stats-grid">
     {stat_cards_html}
   </div>
-
-  <!-- Received Last Hour Chart -->
-  <div class="section-title">Received Last Hour</div>
-  {charts_html}
-
-  {received_section}
-
-  {forecast_html}
 
   <footer>
     <div>
