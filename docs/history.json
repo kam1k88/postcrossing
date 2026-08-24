@@ -1578,5 +1578,15 @@
     "postcards_traveling": 432278,
     "km_traveled": 451378282451,
     "laps_around_world": 11263366.0
+  },
+  {
+    "timestamp": "2026-08-24T07:06:04Z",
+    "members": 805742,
+    "countries": 208,
+    "postcards_received": 87990768,
+    "received_last_hour": 313,
+    "postcards_traveling": 434101,
+    "km_traveled": 451399688140,
+    "laps_around_world": 11263900.0
   }
 ]
